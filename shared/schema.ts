@@ -8,6 +8,43 @@ export type AssessmentFactor = {
   description: string;
 };
 
+export const assessmentFactorSchema = z.object({
+  name: z.string().min(1, "Factor name is required"),
+  impact: z.enum(["positive", "negative"]),
+  description: z.string().min(1, "Factor description is required"),
+});
+
+export const assessmentResponseSchema = z.object({
+  id: z.number().int().positive(),
+  gender: z.enum(["Male", "Female", "Other"]),
+  age: z.number().int().positive(),
+  hypertension: z.boolean(),
+  heartDisease: z.boolean(),
+  smokingHistory: z.string().min(1),
+  bmi: z.string().min(1),
+  hba1cLevel: z.string().min(1),
+  bloodGlucoseLevel: z.string().min(1),
+  riskScore: z.string().min(1),
+  riskCategory: z.enum(["LOW", "MODERATE", "HIGH"]),
+  factors: z.array(assessmentFactorSchema),
+  confidenceInterval: z.string().nullable(),
+  modelConfidence: z.string().nullable(),
+  createdAt: z.string().nullable(),
+});
+
+export const predictionSchema = z.object({
+  riskScore: z.string(),
+  riskCategory: z.string(),
+  factors: z.array(assessmentFactorSchema),
+  confidenceInterval: z.string().nullable().optional(),
+  modelConfidence: z.string().nullable().optional(),
+  disclaimer: z.string(),
+});
+
+export const createAssessmentResponseSchema = assessmentResponseSchema.extend({
+  prediction: predictionSchema,
+});
+
 export const assessments = pgTable("assessments", {
   id: serial("id").primaryKey(),
   gender: text("gender").notNull(), // 'Male', 'Female', 'Other'

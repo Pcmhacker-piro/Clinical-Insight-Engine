@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { insertAssessmentSchema, assessments } from "./schema";
+import { insertAssessmentSchema, assessmentResponseSchema, createAssessmentResponseSchema } from "./schema";
 
 export const errorSchemas = {
   validation: z.object({
@@ -21,7 +21,7 @@ export const api = {
       path: "/api/assessments" as const,
       input: insertAssessmentSchema,
       responses: {
-        201: z.custom<typeof assessments.$inferSelect>(),
+        201: createAssessmentResponseSchema,
         400: errorSchemas.validation,
         500: errorSchemas.internal,
       },
@@ -30,7 +30,7 @@ export const api = {
       method: "GET" as const,
       path: "/api/assessments" as const,
       responses: {
-        200: z.array(z.custom<typeof assessments.$inferSelect>()),
+        200: z.array(assessmentResponseSchema),
       },
     },
   },
