@@ -22,9 +22,10 @@ const execFileAsync = promisify(execFile);
  */
 const activeInferenceRequests = new Set<string>();
 
-function generateRequestFingerprint(payload: unknown): string {
+function generateRequestFingerprint(payload: unknown, userId: string): string {
   return createHash("sha256")
     .update(JSON.stringify(payload))
+    .update(userId)
     .digest("hex");
 }
 
@@ -186,7 +187,10 @@ export async function registerRoutes(
         const input = api.assessments.create.input.parse(req.body);
 
         // Generate fingerprint for request deduplication
-        requestFingerprint = generateRequestFingerprint(input);
+        // Include user identifier to prevent false 409 conflicts across different users
+        // submitting identical clinical data (see issue #179)
+        const userId = req.session.user?.email ?? "anonymous";
+        requestFingerprint = generateRequestFingerprint(input, userId);
 
         // Prevent duplicate concurrent inference execution
         if (activeInferenceRequests.has(requestFingerprint)) {
