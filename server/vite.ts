@@ -49,7 +49,12 @@ export async function setupVite(server: Server, app: Express) {
         `src="/src/main.tsx?v=${nanoid()}"`,
       );
       const page = await vite.transformIndexHtml(url, template);
-      res.status(200).set({ "Content-Type": "text/html" }).end(page);
+      const nonce = (res as any).locals?.nonce || "";
+      const secured = nonce
+        ? page.replace(/<script\b/gi, `<script nonce="${nonce}"`)
+            .replace(/<link\b/gi, `<link nonce="${nonce}"`)
+        : page;
+      res.status(200).set({ "Content-Type": "text/html" }).end(secured);
     } catch (e) {
       vite.ssrFixStacktrace(e as Error);
       next(e);

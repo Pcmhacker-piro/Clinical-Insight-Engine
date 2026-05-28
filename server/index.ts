@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import helmet from "helmet";
 import session from "express-session";
+import crypto from "crypto";
 import createMemoryStore from "memorystore";
 import { DatabaseStartupError, verifyDatabaseConnection } from "./db";
 import { registerRoutes } from "./routes";
@@ -44,13 +45,24 @@ app.use(
 
 app.use(express.urlencoded({ extended: false }));
 
-// Security headers via helmet
+// CSP nonce middleware — generates a unique nonce per request for script-src
+app.use((_req, res, next) => {
+  res.locals.nonce = crypto.randomBytes(16).toString("base64");
+  next();
+});
+
+// Security headers via helmet - uses per-request nonce for script-src
 app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: (req, res) => {
+          const nonce = (res as any).locals?.nonce || "";
+          const src = ["'self'"];
+          if (nonce) src.push(`'nonce-${nonce}'`);
+          return src;
+        },
         styleSrc: [
           "'self'",
           "'unsafe-inline'",

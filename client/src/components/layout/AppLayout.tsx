@@ -74,9 +74,6 @@ export function AppLayout({ children }: AppLayoutProps) {
               })}
             </nav>
           </div>
-
-          </div>
-
           <div className="m-4 border-t border-slate-100 dark:border-gray-800 pt-4">
             {(() => {
               const clinicianName = user.name || user.email;
@@ -96,18 +93,6 @@ export function AppLayout({ children }: AppLayoutProps) {
               onClick={async () => {
                 await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
                 setLocation("/");
-              }}
-              className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 bg-red-50 dark:bg-red-950 hover:bg-red-100 dark:hover:bg-red-900 rounded-xl transition-all duration-200 border border-red-100 dark:border-red-900"
-              aria-label="Sign out of CardioGuard workspace"
-              title="Sign out"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              Sign Out
-            </button>
-            <p className="mt-3 text-xs font-medium leading-5 text-slate-400 dark:text-slate-500">
-              Local workspace secured with simulated 2FA.
-            </p>
-          </div>
               }}
               className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 bg-red-50 dark:bg-red-950 hover:bg-red-100 dark:hover:bg-red-900 rounded-xl transition-all duration-200 border border-red-100 dark:border-red-900"
               aria-label="Sign out of CardioGuard workspace"
