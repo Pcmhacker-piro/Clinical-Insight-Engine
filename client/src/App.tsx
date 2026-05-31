@@ -1,7 +1,6 @@
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
-import ErrorBoundary from "@/components/ErrorBoundary";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
@@ -11,6 +10,7 @@ import History from "./pages/History";
 import LoginPage from "./pages/LoginPage";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Terms from "./pages/Terms";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 function Router() {
   return (
@@ -25,7 +25,6 @@ function Router() {
     </Switch>
   );
 }
-
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -38,5 +37,4 @@ function App() {
     </QueryClientProvider>
   );
 }
-
 export default App;
