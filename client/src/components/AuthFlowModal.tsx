@@ -336,9 +336,47 @@ function OtpForm({ onVerify, email, devOtp }: { onVerify: () => void; email: str
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
+  const [countdown, setCountdown] = useState(600); // 10 minutes in seconds
   const [resentAt, setResentAt] = useState<number | null>(null);
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const isComplete = otp.every(Boolean);
+
+  // Countdown timer
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = setInterval(() => setCountdown((c) => c - 1), 1000);
+    return () => clearInterval(timer);
+  }, [countdown]);
+
+  const formatCountdown = (secs: number) => {
+    const m = Math.floor(secs / 60).toString().padStart(2, "0");
+    const s = (secs % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  };
+
+  const handleResend = async () => {
+    setIsResending(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, _resend: true }),
+        credentials: "include",
+      });
+      if (response.ok) {
+        setCountdown(600);
+        setOtp(["", "", "", "", "", ""]);
+        inputRefs.current[0]?.focus();
+      } else {
+        setError("Failed to resend code. Please try again.");
+      }
+    } catch {
+      setError("Unable to connect. Please try again.");
+    } finally {
+      setIsResending(false);
+    }
+  };
 
   const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -499,22 +537,15 @@ function OtpForm({ onVerify, email, devOtp }: { onVerify: () => void; email: str
           </>
         )}
       </button>
-
-      <div className="mt-6 text-center">
-        <p className="text-sm text-slate-500">
-          Didn&apos;t receive the code?{" "}
-          <button
-            type="button"
-            onClick={handleResend}
-            disabled={isResending}
-            className="font-bold text-[#2563EB] transition-all duration-200 hover:text-blue-700 disabled:opacity-50"
-          >
-            {isResending ? "Sending..." : "Resend code"}
-          </button>
-        </p>
-        {resentAt && (
-          <p className="mt-1 text-xs text-slate-400">Code resent. Please check your email.</p>
-        )}
+      <div className="mt-4 text-center">
+        <button
+          type="button"
+          onClick={handleResend}
+          disabled={isResending || countdown > 540}
+          className="text-sm font-semibold text-[#2563EB] hover:underline disabled:text-slate-400 disabled:no-underline disabled:cursor-not-allowed transition-colors"
+        >
+          {isResending ? "Sending..." : countdown > 540 ? `Resend available in ${formatCountdown(countdown - 540)}` : "Resend OTP"}
+        </button>
       </div>
     </form>
   );
