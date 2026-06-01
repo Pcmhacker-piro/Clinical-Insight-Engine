@@ -384,10 +384,42 @@ def interpret_prediction(model, scaler, features, input_data, cov_beta=None):
     else:
         cat = "HIGH"
         
-    # Generate tailored advice based on category
+    # Per-factor personalized advice lookup.
+    # Keys are matched against the friendly factor name (case-insensitive, partial match).
+    FACTOR_CLINICIAN_ADVICE = {
+        "hba1c": "Elevated HbA1c detected. Order confirmatory OGTT and consider early glycaemic intervention.",
+        "blood glucose": "Elevated blood glucose noted. Recommend fasting plasma glucose retest and dietary review.",
+        "bmi": "Patient BMI indicates overweight/obesity. Refer to structured weight-management or bariatric programme.",
+        "age": "Age is a non-modifiable risk amplifier. Increase screening frequency and review metabolic panel annually.",
+        "hypertension": "Co-existing hypertension compounds insulin resistance. Optimise antihypertensive therapy and monitor renal function.",
+        "heart disease": "Cardiac comorbidity elevates overall cardiometabolic risk. Co-manage with cardiology; consider SGLT-2 inhibitors if indicated.",
+        "smoking": "Smoking accelerates insulin resistance. Provide NRT/varenicline prescription and refer to cessation programme.",
+        "gender": "Consider sex-specific metabolic risk patterns (e.g., PCOS in females). Tailor screening accordingly.",
+    }
+
+    FACTOR_PATIENT_ADVICE = {
+        "hba1c": "Your HbA1c (long-term blood sugar) level is elevated. Reducing sugar and refined carbs can help bring it down.",
+        "blood glucose": "Your blood glucose reading is high. Try to limit sugary drinks and processed foods between meals.",
+        "bmi": "Your weight is contributing to your risk. Even a 5–10% weight reduction can meaningfully lower your diabetes risk.",
+        "age": "Age naturally raises diabetes risk. Regular check-ups and staying active are especially important as you get older.",
+        "hypertension": "High blood pressure and diabetes risk are closely linked. Reducing salt, stress, and staying active can help both.",
+        "heart disease": "Your heart condition is linked to higher diabetes risk. Follow your cardiologist's advice and monitor blood sugar regularly.",
+        "smoking": "Smoking significantly raises your diabetes risk. Quitting — even gradually — has immediate health benefits.",
+        "gender": "Your biological sex can influence metabolic risk. Discuss any hormonal or reproductive health factors with your doctor.",
+    }
+
+    def _factor_advice(factor_name: str, lookup: dict) -> str | None:
+        """Return the most specific advice string for a given factor name."""
+        name_lower = factor_name.lower()
+        for key, advice in lookup.items():
+            if key in name_lower:
+                return advice
+        return None
+
+    # Generate tailored advice based on risk category (base advice)
     clinician_advice = []
     patient_advice = []
-    
+
     if cat == "LOW":
         clinician_advice.append("Monitor annually. No immediate intervention required.")
         patient_advice.append("Keep up the good work! Continue your healthy lifestyle and routine checkups.")
@@ -397,6 +429,17 @@ def interpret_prediction(model, scaler, features, input_data, cov_beta=None):
     else:
         clinician_advice.append("High risk detected. Refer for diagnostic testing and consider intervention.")
         patient_advice.append("Please consult your doctor soon to discuss a detailed prevention plan.")
+
+    # Append factor-specific advice for each top contributing risk factor
+    for factor in top_factors:
+        if factor.get("impact") == "positive":  # Only personalise for risk-increasing factors
+            fname = factor.get("name", "")
+            c_advice = _factor_advice(fname, FACTOR_CLINICIAN_ADVICE)
+            p_advice = _factor_advice(fname, FACTOR_PATIENT_ADVICE)
+            if c_advice:
+                clinician_advice.append(c_advice)
+            if p_advice:
+                patient_advice.append(p_advice)
         
     return {
         "riskScore": risk_score,
