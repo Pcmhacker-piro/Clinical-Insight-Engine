@@ -736,7 +736,9 @@ export async function registerRoutes(
   app.get(api.assessments.list.path, requireAuth, requireVerified, async (req, res) => {
     try {
       const userEmail = req.session.user?.email;
-      const assessments = await storage.getAssessments(50, 0, userEmail);
+      const limit = parseInt(req.query.limit as string) || 50;
+      const offset = parseInt(req.query.offset as string) || 0;
+      const assessments = await storage.getAssessments(limit, offset, userEmail);
 
       res.json(assessments);
 
