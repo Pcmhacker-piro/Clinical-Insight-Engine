@@ -23,13 +23,9 @@ import { writeFile, unlink } from "fs/promises";
 import { existsSync } from "fs";
 import { randomUUID } from "crypto";
 import { execFile } from "child_process";
-import { fileURLToPath } from "url";
 import path from "path";
 import os from "os";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const analyzePyPath = path.resolve(__dirname, "..", "..", "analyze.py");
+import { getPythonDaemonPath } from "../utils/pythonDaemon";
 
 function getPythonExecutable() {
   const candidates =
@@ -152,7 +148,7 @@ assessmentsRouter.post(
       const stdout = await new Promise<string>((resolve, reject) => {
         const child = execFile(
           getPythonExecutable(),
-          [analyzePyPath, "counterfactual", tempFile],
+          [getPythonDaemonPath(), "counterfactual", tempFile],
           { timeout: 30000, maxBuffer: 10 * 1024 * 1024 },
           (error, stdout, stderr) => {
             if (error) reject(error);
@@ -197,7 +193,7 @@ assessmentsRouter.post(
       const stdout = await new Promise<string>((resolve, reject) => {
         const child = execFile(
           getPythonExecutable(),
-          [analyzePyPath, "counterfactual_auto", tempFile],
+          [getPythonDaemonPath(), "counterfactual_auto", tempFile],
           { timeout: 30000, maxBuffer: 10 * 1024 * 1024 },
           (error, stdout, stderr) => {
             if (error) reject(error);

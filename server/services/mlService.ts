@@ -4,14 +4,9 @@ import { existsSync } from "fs";
 import { writeFile, unlink } from "fs/promises";
 import os from "os";
 import path from "path";
-import { fileURLToPath } from "url";
 import { logger } from "../logger";
 import readline from "readline";
-
-// ESM-compatible path resolution for analyze.py
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const analyzePyPath = path.resolve(__dirname, "..", "..", "analyze.py");
+import { getPythonDaemonPath } from "../utils/pythonDaemon";
 
 export class SimpleSemaphore {
   private activeCount = 0;
@@ -282,7 +277,7 @@ class PythonDaemonManager {
     logger.info("Starting persistent Python ML daemon...");
     const pythonExe = getPythonExecutable();
 
-    this.process = spawn(pythonExe, [analyzePyPath, "daemon"], {
+    this.process = spawn(pythonExe, [getPythonDaemonPath(), "daemon"], {
       stdio: ["pipe", "pipe", "pipe"],
     });
 

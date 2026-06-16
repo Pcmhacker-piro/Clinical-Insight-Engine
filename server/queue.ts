@@ -8,12 +8,7 @@ import { MLService, calculateClinicalFallback } from "./services/mlService";
 import { execFile } from "child_process";
 import fs from "fs/promises";
 import path from "path";
-import os from "os";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const analyzePyPath = path.resolve(__dirname, "..", "analyze.py");
+import { getPythonDaemonPath } from "./utils/pythonDaemon";
 
 export function getPythonExecutable(): string {
   const candidates =
